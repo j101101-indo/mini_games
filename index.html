@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini Tic-Tac-Toe (3×3)</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --muted: #94a3b8;
+        --x: #22d3ee; /* cyan */
+        --o: #f472b6; /* pink */
+        --win: #22c55e; /* green */
+        --cell: #1f2937;
+        --cell-hover: #334155;
+        --text: #e5e7eb;
+        --accent: #a78bfa;
+      }
+
+      * { box-sizing: border-box; }
+      html, body {
+        height: 100%;
+        background: radial-gradient(1200px 600px at 20% 10%, #111827 10%, #0b1220 40%, #0a0f1a 80%) fixed, var(--bg);
+        color: var(--text);
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+
+      .app {
+        min-height: 100%;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .panel {
+        width: min(92vw, 520px);
+        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+        backdrop-filter: blur(6px);
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 0.3px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .badge {
+        font-size: 12px;
+        color: var(--muted);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        padding: 2px 8px;
+        border-radius: 999px;
+      }
+
+      .status {
+        font-size: 14px;
+        color: var(--muted);
+        padding: 8px 12px;
+        border: 1px dashed rgba(148, 163, 184, 0.25);
+        border-radius: 10px;
+      }
+
+      .board {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .cell {
+        background: var(--cell);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        color: var(--text);
+        font-weight: 800;
+        font-size: clamp(36px, 8vw, 48px);
+        line-height: 1;
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1 / 1;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.06s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .cell:hover {
+        background: var(--cell-hover);
+        transform: translateY(-1px);
+        border-color: rgba(167, 139, 250, 0.35);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      }
+
+      .cell:active {
+        transform: translateY(0);
+      }
+
+      .cell[disabled] {
+        cursor: not-allowed;
+        opacity: 0.9;
+      }
+
+      .cell.x { color: var(--x); text-shadow: 0 2px 10px rgba(34,211,238,0.25); }
+      .cell.o { color: var(--o); text-shadow: 0 2px 10px rgba(244,114,182,0.25); }
+
+      .cell.win {
+        outline: 2px solid rgba(34,197,94,0.6);
+        box-shadow: 0 0 0 4px rgba(34,197,94,0.15), 0 10px 24px rgba(0,0,0,0.45);
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: linear-gradient(180deg, rgba(167,139,250,0.18), rgba(167,139,250,0.06));
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.06s ease, filter 0.15s ease, border-color 0.15s ease;
+      }
+
+      .btn:hover { filter: brightness(1.06); border-color: rgba(167, 139, 250, 0.35); }
+      .btn:active { transform: translateY(1px); }
+
+      .legend { font-size: 12px; color: var(--muted); }
+      .legend strong { color: var(--text); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cell, .btn { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel" aria-label="Tic-Tac-Toe game">
+        <div class="header">
+          <h1>
+            Mini Tic‑Tac‑Toe
+            <span class="badge" aria-hidden="true">3×3</span>
+          </h1>
+          <div id="status" class="status" aria-live="polite" role="status"></div>
+        </div>
+
+        <div class="board" role="grid" aria-label="3 by 3 board">
+          <button class="cell" role="gridcell" aria-label="Cell 1" data-index="0"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 2" data-index="1"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 3" data-index="2"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 4" data-index="3"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 5" data-index="4"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 6" data-index="5"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 7" data-index="6"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 8" data-index="7"></button>
+          <button class="cell" role="gridcell" aria-label="Cell 9" data-index="8"></button>
+        </div>
+
+        <div class="controls">
+          <button id="reset" class="btn" type="button">Reset</button>
+          <div class="legend">Turn: <strong id="turnLabel">X</strong></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      "use strict";
+
+      /** @type {HTMLButtonElement[]} */
+      const cells = Array.from(document.querySelectorAll(".cell"));
+      /** @type {HTMLDivElement} */
+      const statusEl = document.getElementById("status");
+      /** @type {HTMLButtonElement} */
+      const resetBtn = document.getElementById("reset");
+      /** @type {HTMLElement} */
+      const turnLabel = document.getElementById("turnLabel");
+
+      /** @type {("X"|"O"|null)[]} */
+      let board = Array(9).fill(null);
+      /** @type {"X"|"O"} */
+      let currentPlayer = "X";
+      let isGameOver = false;
+
+      const WINNING_COMBINATIONS = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      function updateStatus(message) {
+        statusEl.textContent = message;
+      }
+
+      function setTurnLabel(player) {
+        turnLabel.textContent = player;
+        turnLabel.style.color = player === "X" ? getComputedStyle(document.documentElement).getPropertyValue("--x") : getComputedStyle(document.documentElement).getPropertyValue("--o");
+      }
+
+      function startGame() {
+        board = Array(9).fill(null);
+        currentPlayer = "X";
+        isGameOver = false;
+        cells.forEach((cell) => {
+          cell.textContent = "";
+          cell.classList.remove("x", "o", "win");
+          cell.disabled = false;
+          cell.setAttribute("aria-label", `Empty cell ${Number(cell.dataset.index) + 1}`);
+        });
+        setTurnLabel(currentPlayer);
+        updateStatus("Game on. X starts!");
+      }
+
+      function handleCellClick(event) {
+        if (isGameOver) return;
+        const cell = event.currentTarget;
+        const index = Number(cell.dataset.index);
+        if (Number.isNaN(index)) return;
+        if (board[index] !== null) return;
+
+        // Place mark
+        board[index] = currentPlayer;
+        cell.textContent = currentPlayer;
+        cell.classList.add(currentPlayer.toLowerCase());
+        cell.setAttribute("aria-label", `Cell ${index + 1}: ${currentPlayer}`);
+
+        const result = checkGameState();
+        if (result) {
+          endGame(result);
+          return;
+        }
+
+        // Switch player
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        setTurnLabel(currentPlayer);
+        updateStatus(`${currentPlayer}'s turn.`);
+      }
+
+      function checkGameState() {
+        for (const [a, b, c] of WINNING_COMBINATIONS) {
+          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            // Highlight winning cells
+            [a, b, c].forEach((i) => cells[i].classList.add("win"));
+            return { type: "win", player: board[a] };
+          }
+        }
+        if (board.every((cell) => cell !== null)) {
+          return { type: "draw" };
+        }
+        return null;
+      }
+
+      function endGame(result) {
+        isGameOver = true;
+        cells.forEach((cell) => (cell.disabled = true));
+        if (result.type === "win") {
+          updateStatus(`${result.player} wins! 🎉`);
+        } else {
+          updateStatus("It's a draw. Cat's game! 🐱");
+        }
+      }
+
+      // Wire up events
+      cells.forEach((cell) => cell.addEventListener("click", handleCellClick));
+      resetBtn.addEventListener("click", startGame);
+
+      // Init
+      startGame();
+    </script>
+  </body>
+</html>
